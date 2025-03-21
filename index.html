@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRE Punishment Appeals</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+        button { padding: 10px; cursor: pointer; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VRE Punishment Appeals</h1>
+        <p>Submit your appeal below. You may only submit one appeal.</p>
+        <form id="appealForm">
+            <label for="username">Discord Username:</label>
+            <input type="text" id="username" required>
+            
+            <label for="punishment">Type of Punishment:</label>
+            <select id="punishment">
+                <option value="warn">Warning</option>
+                <option value="mute">Mute</option>
+                <option value="kick">Kick</option>
+                <option value="ban">Ban</option>
+            </select>
+            
+            <label for="reason">Why should this be appealed?</label>
+            <textarea id="reason" required></textarea>
+            
+            <button type="submit">Submit Appeal</button>
+        </form>
+        <p id="submittedMessage" class="hidden">Your appeal has been submitted.</p>
+    </div>
+    
+    <script>
+        const webhookURL = "https://discord.com/api/webhooks/1352530923538612254/MoT75E-8XjVWxObwzh3yJslokaugmsqVXEJkI3ITHYABisAUoBO9Ft8He-9TczNVVvA_";
+        const appealForm = document.getElementById("appealForm");
+        const submittedMessage = document.getElementById("submittedMessage");
+
+        if (localStorage.getItem("appealSubmitted")) {
+            appealForm.style.display = "none";
+            submittedMessage.classList.remove("hidden");
+        }
+
+        appealForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const punishment = document.getElementById("punishment").value;
+            const reason = document.getElementById("reason").value;
+            
+            const embed = {
+                title: "New Punishment Appeal",
+                color: 16711680,
+                fields: [
+                    { name: "Username", value: username, inline: true },
+                    { name: "Punishment Type", value: punishment, inline: true },
+                    { name: "Appeal Reason", value: reason }
+                ]
+            };
+            
+            fetch(webhookURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ embeds: [embed] })
+            }).then(() => {
+                localStorage.setItem("appealSubmitted", "true");
+                appealForm.style.display = "none";
+                submittedMessage.classList.remove("hidden");
+            }).catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>
