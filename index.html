@@ -5,20 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VRE Punishment Appeals</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        textarea { width: 100%; height: 100px; margin: 10px 0; }
-        button { padding: 10px; cursor: pointer; }
-        .hidden { display: none; }
+        /* General Body and Text Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            text-align: center;
+            padding: 40px;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #3a3a3a;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        /* Form Styling */
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        button {
+            padding: 15px 25px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Submission Confirmation Message */
+        #submittedMessage {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h1>VRE Punishment Appeals</h1>
-        <p>Submit your appeal below. You may only submit one appeal.</p>
+        <p>We value fairness. Please submit your appeal below. You can only submit one appeal.</p>
+        
         <form id="appealForm">
             <label for="username">Discord Username:</label>
-            <input type="text" id="username" required>
+            <input type="text" id="username" placeholder="Enter your Discord username" required>
             
             <label for="punishment">Type of Punishment:</label>
             <select id="punishment">
@@ -29,11 +111,12 @@
             </select>
             
             <label for="reason">Why should this be appealed?</label>
-            <textarea id="reason" required></textarea>
+            <textarea id="reason" placeholder="Provide the reason for your appeal..." required></textarea>
             
             <button type="submit">Submit Appeal</button>
         </form>
-        <p id="submittedMessage" class="hidden">Your appeal has been submitted.</p>
+        
+        <p id="submittedMessage" class="hidden">Your appeal has been submitted successfully. We will review it shortly.</p>
     </div>
     
     <script>
@@ -41,6 +124,7 @@
         const appealForm = document.getElementById("appealForm");
         const submittedMessage = document.getElementById("submittedMessage");
 
+        // Check if appeal has already been submitted
         if (localStorage.getItem("appealSubmitted")) {
             appealForm.style.display = "none";
             submittedMessage.classList.remove("hidden");
@@ -63,6 +147,7 @@
                 ]
             };
             
+            // Send appeal data to webhook
             fetch(webhookURL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -76,3 +161,4 @@
     </script>
 </body>
 </html>
+
