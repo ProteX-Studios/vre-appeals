@@ -150,17 +150,17 @@
         <h1>VRE Punishment Appeals</h1>
         <p>Submit your appeal below. You may only submit one appeal.</p>
         <form id="appealForm">
-            <label for="member">Select Member:</label>
-            <select id="member" required>
-                <option value="">Loading member list...</option>
-            </select>
-
             <label for="punishment">Type of Punishment:</label>
             <select id="punishment" required>
                 <option value="warn">Warning</option>
                 <option value="mute">Mute</option>
                 <option value="kick">Kick</option>
                 <option value="ban">Ban</option>
+            </select>
+            
+            <label for="member" id="memberLabel">Select Member:</label>
+            <select id="member" required>
+                <option value="">Loading member list...</option>
             </select>
             
             <label for="reason">Why should this be appealed?</label>
@@ -176,6 +176,9 @@
     <script>
         const webhookURL = "https://discord.com/api/webhooks/1352532360700366951/0IRZDIs1O4IWzuFmO1r65TgOXS6Dyi6AtRfDLeJ_jpEeDG2O1ab83fFdjeOxJ-ICQqyn";
         const appealForm = document.getElementById("appealForm");
+        const punishmentSelect = document.getElementById("punishment");
+        const memberSelect = document.getElementById("member");
+        const memberLabel = document.getElementById("memberLabel");
         const submittedMessage = document.getElementById("submittedMessage");
         const resetButton = document.getElementById("resetButton");
 
@@ -188,10 +191,8 @@
                 const data = await response.json();
                 const members = data.members;
 
-                const memberSelect = document.getElementById("member");
-                memberSelect.innerHTML = '<option value="">Select a member</option>'; // Clear loading state
-                
-                // Populate member dropdown
+                // Populate the member dropdown
+                memberSelect.innerHTML = '<option value="">Select a member</option>';
                 members.forEach(member => {
                     const option = document.createElement('option');
                     option.value = member.id;
@@ -224,19 +225,42 @@
             }
         }
 
+        // Handle punishment type change
+        punishmentSelect.addEventListener('change', function() {
+            if (punishmentSelect.value === 'ban') {
+                // If Ban is selected, change member field to text input
+                memberSelect.style.display = 'none';
+                memberLabel.innerText = 'Enter Member ID for Ban:';
+                memberLabel.setAttribute('for', 'memberId');
+                memberSelect.innerHTML = '<option value="">Enter a Member ID</option>';
+                const memberInput = document.createElement('input');
+                memberInput.type = 'text';
+                memberInput.id = 'memberId';
+                memberInput.placeholder = 'Enter the user ID to ban';
+                memberInput.required = true;
+                memberSelect.parentNode.appendChild(memberInput);
+            } else {
+                // Revert to the dropdown for other punishment types
+                memberSelect.style.display = 'block';
+                memberLabel.innerText = 'Select Member:';
+                memberLabel.setAttribute('for', 'member');
+                fetchMembers(); // Fetch the member list again
+            }
+        });
+
         // Form submission
         appealForm.addEventListener("submit", function(event) {
             event.preventDefault();
 
-            const username = document.getElementById("member").selectedOptions[0].text;
-            const punishment = document.getElementById("punishment").value;
+            const punishment = punishmentSelect.value;
             const reason = document.getElementById("reason").value;
-            
+            let member = punishment === 'ban' ? document.getElementById("memberId").value : memberSelect.selectedOptions[0].text;
+
             const embed = {
                 title: "New Punishment Appeal",
                 color: 16711680,
                 fields: [
-                    { name: "Username", value: username, inline: true },
+                    { name: "Member", value: member, inline: true },
                     { name: "Punishment Type", value: punishment, inline: true },
                     { name: "Appeal Reason", value: reason }
                 ]
@@ -252,26 +276,21 @@
                 localStorage.setItem("firstSubmitDate", now);  // Store the first submission date
                 appealForm.style.display = "none";
                 submittedMessage.classList.remove("hidden");
-            }).catch(error => console.error("Error:", error));
+            }).catch(error => {
+                console.error('Error submitting appeal:', error);
+                alert('Failed to submit appeal. Please try again later.');
+            });
         });
 
-        // Reset the appeal submission record
+        // Reset form logic
         function resetForm() {
-            const firstSubmitDate = localStorage.getItem("firstSubmitDate");
-            const now = new Date().getTime();
-            const diffDays = Math.floor((now - firstSubmitDate) / (1000 * 3600 * 24)); // Difference in days
-
-            if (diffDays >= MAX_APPEAL_DAYS) {
-                localStorage.removeItem("appealSubmitted");
-                localStorage.removeItem("firstSubmitDate");
-                location.reload(); // Reload the page to reset the form
-            } else {
-                alert(`You can only reset your appeal submission after ${MAX_APPEAL_DAYS} days.`);
-            }
+            localStorage.removeItem("appealSubmitted");
+            localStorage.removeItem("firstSubmitDate");
+            location.reload();
         }
 
-        // Fetch the members when the page loads
-        window.onload = fetchMembers;
+        // Initialize member list
+        fetchMembers();
     </script>
 </body>
 </html>
