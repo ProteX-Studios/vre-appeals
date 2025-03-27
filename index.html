@@ -5,102 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VRE Punishment Appeals</title>
     <style>
-        /* General Body and Text Styling */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            text-align: center;
-            padding: 40px;
-            margin: 0;
-        }
-
-        h1 {
-            font-size: 36px;
-            color: #3a3a3a;
-            margin-bottom: 10px;
-        }
-
-        p {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 20px;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-        }
-
-        /* Form Styling */
-        input[type="text"], select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        button {
-            padding: 15px 25px;
-            background-color: #007BFF;
-            color: white;
-            font-size: 18px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* Submission Confirmation Message */
-        #submittedMessage {
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
-            margin-top: 20px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 20px;
-            }
-
-            .container {
-                padding: 20px;
-            }
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+        button { padding: 10px; cursor: pointer; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>VRE Punishment Appeals</h1>
-        <p>We value fairness. Please submit your appeal below. You can only submit one appeal.</p>
-        
+        <p>Submit your appeal below. You may only submit one appeal.</p>
         <form id="appealForm">
             <label for="username">Discord Username:</label>
-            <input type="text" id="username" placeholder="Enter your Discord username" required>
+            <input type="text" id="username" required>
             
             <label for="punishment">Type of Punishment:</label>
             <select id="punishment">
@@ -111,25 +29,41 @@
             </select>
             
             <label for="reason">Why should this be appealed?</label>
-            <textarea id="reason" placeholder="Provide the reason for your appeal..." required></textarea>
+            <textarea id="reason" required></textarea>
             
             <button type="submit">Submit Appeal</button>
         </form>
-        
-        <p id="submittedMessage" class="hidden">Your appeal has been submitted successfully. We will review it shortly.</p>
+        <p id="submittedMessage" class="hidden">Your appeal has been submitted.</p>
+        <button type="button" id="resetButton" class="hidden" onclick="resetForm()">Reset Appeal Submission</button>
     </div>
-    
+
     <script>
         const webhookURL = "https://discord.com/api/webhooks/1352532360700366951/0IRZDIs1O4IWzuFmO1r65TgOXS6Dyi6AtRfDLeJ_jpEeDG2O1ab83fFdjeOxJ-ICQqyn";
         const appealForm = document.getElementById("appealForm");
         const submittedMessage = document.getElementById("submittedMessage");
+        const resetButton = document.getElementById("resetButton");
 
-        // Check if appeal has already been submitted
-        if (localStorage.getItem("appealSubmitted")) {
+        const MAX_APPEAL_DAYS = 30;  // 30 days rule
+
+        // Check if appeal was already submitted and check the timestamp
+        const appealSubmitted = localStorage.getItem("appealSubmitted");
+        const firstSubmitDate = localStorage.getItem("firstSubmitDate");
+
+        if (appealSubmitted) {
             appealForm.style.display = "none";
             submittedMessage.classList.remove("hidden");
+            const now = new Date().getTime();
+            const diffDays = Math.floor((now - firstSubmitDate) / (1000 * 3600 * 24)); // Difference in days
+
+            console.log(`First appeal submission was on: ${new Date(parseInt(firstSubmitDate)).toLocaleString()}`);
+            console.log(`Days since first submission: ${diffDays}`);
+
+            if (diffDays >= MAX_APPEAL_DAYS) {
+                resetButton.classList.remove("hidden");  // Show reset button after 30 days
+            }
         }
 
+        // Form submission
         appealForm.addEventListener("submit", function(event) {
             event.preventDefault();
 
@@ -147,18 +81,35 @@
                 ]
             };
             
-            // Send appeal data to webhook
             fetch(webhookURL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ embeds: [embed] })
             }).then(() => {
+                const now = new Date().getTime(); // Get the current timestamp
                 localStorage.setItem("appealSubmitted", "true");
+                localStorage.setItem("firstSubmitDate", now);  // Store the first submission date
                 appealForm.style.display = "none";
                 submittedMessage.classList.remove("hidden");
             }).catch(error => console.error("Error:", error));
         });
+
+        // Reset the appeal submission record
+        function resetForm() {
+            const firstSubmitDate = localStorage.getItem("firstSubmitDate");
+            const now = new Date().getTime();
+            const diffDays = Math.floor((now - firstSubmitDate) / (1000 * 3600 * 24)); // Difference in days
+
+            if (diffDays >= MAX_APPEAL_DAYS) {
+                localStorage.removeItem("appealSubmitted");
+                localStorage.removeItem("firstSubmitDate");
+                location.reload(); // Reload the page to reset the form
+            } else {
+                alert(`You can only reset your appeal submission after ${MAX_APPEAL_DAYS} days.`);
+            }
+        }
     </script>
 </body>
 </html>
+
 
